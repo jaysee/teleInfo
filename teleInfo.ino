@@ -8,23 +8,15 @@
 #define TI_TX 5
 
 // uncomment to enable debuging
-#define DEBUG_ENABLED
+//#define DEBUG_ENABLED
 
-// longueur max des données qu'on recoi
+#define VERSION "0.2"
+
+// longueur max des données qu'on recoit
 #define BUFSIZE 15
 
 // durée entre 2 rafraichissements des données
-#define SLEEP_TIME (60 * 1000)
-
-// battery voltage calculator
-// mmm la téléinfo emet un signal carré entre -25v et 25v a 1200bps, une diode, une capa, le regul du duino et hop non ?
-#define BATTERY_VOLTAGE 9.0
-#define BATTERY_SENSE_PIN A0
-// pont diviseur de tension
-#define VDIV_R1 100e3
-#define VDIV_R2 10e3
-// vdiv est la sensibilité de mon pont diviseur de tension
-#define VDIV ( ( VDIV_R1 + VDIV_R2 ) / VDIV_R2 ) * 1.1 / 1023
+#define SLEEP_TIME (30 * 1000)
 
 MySensor gw;
 
@@ -51,7 +43,7 @@ MyMessage msgPTEC( CHILD_ID_PTEC, V_VAR3 );
 MyMessage msgIINST( CHILD_ID_IINST, V_CURRENT );
 
 #define CHILD_ID_ADPS 5
-MyMessage msgADPS( CHILD_ID_ADPS, V_KWH );
+MyMessage msgADPS( CHILD_ID_ADPS, V_CURRENT );
 
 #define CHILD_ID_IMAX 6
 MyMessage msgIMAX( CHILD_ID_IMAX, V_CURRENT );
@@ -80,7 +72,7 @@ MyMessage msgEJP_HN( CHILD_ID_EJP_HN, V_KWH );
 MyMessage msgEJP_HPM( CHILD_ID_EJP_HPM, V_KWH );
 
 #define CHILD_ID_PEJP 32
-MyMessage msgPEJP( CHILD_ID_PEJP, V_KWH );
+MyMessage msgPEJP( CHILD_ID_PEJP, V_KWH ); // ya pas de type pour des durées...
 
 // infos tarif BBR (tempo)
 ///////////////////////////////////
@@ -124,11 +116,8 @@ void setup() {
 
 	tiSerial.begin( 1200 );
 
-	// use the 1.1 V internal reference
-	analogReference( INTERNAL );
-
 	gw.begin();
-	gw.sendSketchInfo( "Teleinfo Sensor", "0.1" );
+	gw.sendSketchInfo( "Teleinfo Sensor", VERSION );
 
 	gw.present( CHILD_ID_ADCO, S_POWER );
 	gw.present( CHILD_ID_OPTARIF, S_POWER );
@@ -158,44 +147,6 @@ void setup() {
 
 	gw.present( CHILD_ID_HHPHC, S_POWER );
 }
-
-/*
-void readBatteryLevel( MySensor &mygw ) {
-	static int oldBatteryPcnt = 0;
-
-	// get the battery Voltage
-	int sensorValue = analogRead( BATTERY_SENSE_PIN );
-
-#ifdef DEBUG_ENABLED
-	Serial.print( F("Sensor Value: ") );
-	Serial.println(sensorValue);
-#endif
-
-	float batteryV = sensorValue * VDIV;
-
-#ifdef DEBUG_ENABLED
-	Serial.print( F("Battery Voltage: ") );
-	Serial.print( batteryV );
-	Serial.println( F(" V") );
-#endif
-
-	int batteryPcnt = batteryV * 100 / BATTERY_VOLTAGE;
-	if (batteryPcnt > 100)
-		batteryPcnt = 100;
-
-#ifdef DEBUG_ENABLED
-	Serial.print( F("Battery percent: ") );
-	Serial.print(batteryPcnt);
-	Serial.println( F(" %") );
-#endif
-
-	if ( oldBatteryPcnt != batteryPcnt ) {
-		// Power up radio after sleep
-		mygw.sendBatteryLevel( batteryPcnt );
-		oldBatteryPcnt = batteryPcnt;
-	}
-}
-*/
 
 typedef struct TeleInfo TeleInfo;
 struct TeleInfo {
@@ -480,7 +431,6 @@ void getTI() {
 }
 
 void loop() {
-	//readBatteryLevel( gw );
 	getTI();
 
 	// attendre avant prochaine lecture
