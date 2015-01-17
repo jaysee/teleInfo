@@ -14,7 +14,7 @@
 #define BUFSIZE 15
 
 // durée entre 2 rafraichissements des données
-#define SLEEP_TIME (10 * 1000)
+#define SLEEP_TIME (60 * 1000)
 
 // battery voltage calculator
 // mmm la téléinfo emet un signal carré entre -25v et 25v a 1200bps, une diode, une capa, le regul du duino et hop non ?
@@ -114,9 +114,9 @@ MyMessage msgHHPHC( CHILD_ID_HHPHC, V_VAR4 );
 SoftwareSerial tiSerial( TI_RX, TI_RX );
 
 void setup() {
-	// reduce clock speed (reduce power consumption)
-	CLKPR = (1<<CLKPCE);
-	CLKPR = B00000011; // should put the clock at 1Mhz
+	// // reduce clock speed (reduce power consumption)
+	// CLKPR = (1<<CLKPCE);
+	// CLKPR = B00000011; // should put the clock at 1Mhz
 
 #ifdef DEBUG_ENABLED
 	Serial.begin( 115200 );
@@ -209,7 +209,7 @@ struct TeleInfo {
 	//     EJP. : option EJP
 	//     BBRx : option tempo, x est un char qui indique kkchose (relooooooou les mecs)
 	uint8_t ISOUSC; // : Intensité souscrite 2chars en Ampères - m'en fous
- 	uint32_t BASE; // Index si option = base (en Wh)
+	//uint32_t BASE; // Index si option = base (en Wh) - le probleme est qu'il semble qu'on recoive un *10000
 
 	uint32_t HC_HC; // Index heures creuses si option = heures creuses (en Wh)
 	uint32_t HC_HP; // Index heures pleines si option = heures creuses (en Wh)
@@ -271,7 +271,7 @@ bool atolTI( char *label, char *searchLabel, char *value, uint32_t &last, MyMess
 	if ( strcmp( label, searchLabel ) != 0 )
 		return false;
 
-	tmp = atol( value );
+	tmp = atoi( value );
 	if ( last == tmp )
 		return true;
 
@@ -376,7 +376,7 @@ void getTI() {
 	uint8_t i; // un compteur
 	uint8_t myCS = 32, cs; // le checksum
 
-	// commencer par detecter le label (search for 0x20)
+	// commencer par detecter le label (search for ' ')
 	i = 0;
 	char label[ BUFSIZE ]; // etiquette
 	memset( label, 0, BUFSIZE );
@@ -391,7 +391,7 @@ void getTI() {
 			break; 
 	}
 
-	// la value (search for 0x20)
+	// la value (search for ' ')
 	i = 0;
 	char value[ BUFSIZE ];  // la value la plus longue ligne est ADCO / 15
 	memset( value, 0, BUFSIZE );
@@ -441,7 +441,7 @@ void getTI() {
 	if ( strTI( label, "ADCO", value, last.ADCO, msgADCO ) )			goto readLine;
 	if ( strTI( label, "OPTARIF", value, last.OPTARIF, msgOPTARIF ) )	goto readLine;
 	if ( atoiTI( label, "ISOUSC", value, last.ISOUSC, msgISOUSC ) )		goto readLine;
-	if ( atolTI( label, "BASE", value, last.BASE, msgBASE ) )			goto readLine;
+	//if ( atolTI( label, "BASE", value, last.BASE, msgBASE ) )			goto readLine;
 
 	if ( atolTI( label, "HCHC", value, last.HC_HC, msgHC_HC ) )			goto readLine;
 	if ( atolTI( label, "HCHP", value, last.HC_HP, msgHC_HP ) )			goto readLine;
@@ -466,8 +466,7 @@ void getTI() {
 	if ( atoiTI( label, "IMAX", value, last.IMAX, msgIMAX ) )			goto readLine;
 	if ( atolTI( label, "PAPP", value, last.PAPP, msgPAPP ) )			goto readLine;
 
-	if ( charTI( label, "HHPHC", value[0], last.HHPHC, msgHHPHC ) )
-		goto readLine;
+	if ( charTI( label, "HHPHC", value[0], last.HHPHC, msgHHPHC ) )		goto readLine;
 
 #ifdef DEBUG_ENABLED
 	Serial.print( F( "unkown LABEL=" ) );
