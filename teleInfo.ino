@@ -16,7 +16,7 @@
 #define BUFSIZE 15
 
 // durée entre 2 rafraichissements des données
-#define SLEEP_TIME (30 * 1000)
+#define SLEEP_TIME (60 * 1000)
 
 MySensor gw;
 
