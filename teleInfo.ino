@@ -1,3 +1,11 @@
+// uncomment to enable debuging using serial port @115200bps
+//#define DEBUG_ENABLED
+
+// durée entre 2 rafraichissements des données - en mili-secondes (bien laisser UL la fin)
+// j'ai un probleme, il met 3 fois plus de temps que ce que j'indique!
+// testé sur un arduino pro mini 3.3v/8mhz - est-ce lié????
+#define SLEEP_TIME 20000UL
+
 // mysensors
 #include <SPI.h>
 #include <MySensor.h>
@@ -7,16 +15,11 @@
 #define TI_RX 4
 #define TI_TX 5
 
-// uncomment to enable debuging
-//#define DEBUG_ENABLED
+// version du sketch
+#define VERSION "0.3"
 
-#define VERSION "0.2"
-
-// longueur max des données qu'on recoit
+// longueur max des données qu'on reçoit
 #define BUFSIZE 15
-
-// durée entre 2 rafraichissements des données
-#define SLEEP_TIME (60 * 1000)
 
 MySensor gw;
 
@@ -49,27 +52,27 @@ MyMessage msgADPS( CHILD_ID_ADPS, V_CURRENT );
 MyMessage msgIMAX( CHILD_ID_IMAX, V_CURRENT );
 
 #define CHILD_ID_PAPP 7
-MyMessage msgPAPP( CHILD_ID_PAPP, V_WATT );
+MyMessage msgPAPP( CHILD_ID_PAPP, V_WATT ); // pas vrai c'est des VA!
 
 // infos tarif BASE
 ///////////////////////////////////
 #define CHILD_ID_BASE 10
-MyMessage msgBASE( CHILD_ID_BASE, V_KWH );
+MyMessage msgBASE( CHILD_ID_BASE, V_KWH ); // en fait c'est des WH
 
 // infos tarif HC/HP
 ///////////////////////////////////
 #define CHILD_ID_HC_HC 20
-MyMessage msgHC_HC( CHILD_ID_HC_HC, V_KWH );
+MyMessage msgHC_HC( CHILD_ID_HC_HC, V_KWH ); // en fait c'est des WH
 
 #define CHILD_ID_HC_HP 21
-MyMessage msgHC_HP( CHILD_ID_HC_HP, V_KWH) ;
+MyMessage msgHC_HP( CHILD_ID_HC_HP, V_KWH) ; // en fait c'est des WH
 
 // infos EJP
 #define CHILD_ID_EJP_HN 30
-MyMessage msgEJP_HN( CHILD_ID_EJP_HN, V_KWH );
+MyMessage msgEJP_HN( CHILD_ID_EJP_HN, V_KWH ); // en fait c'est des WH
 
 #define CHILD_ID_EJP_HPM 31
-MyMessage msgEJP_HPM( CHILD_ID_EJP_HPM, V_KWH );
+MyMessage msgEJP_HPM( CHILD_ID_EJP_HPM, V_KWH ); // en fait c'est des WH
 
 #define CHILD_ID_PEJP 32
 MyMessage msgPEJP( CHILD_ID_PEJP, V_KWH ); // ya pas de type pour des durées...
@@ -77,25 +80,25 @@ MyMessage msgPEJP( CHILD_ID_PEJP, V_KWH ); // ya pas de type pour des durées...
 // infos tarif BBR (tempo)
 ///////////////////////////////////
 #define CHILD_ID_BBR_HC_JB 40
-MyMessage msgBBR_HC_JB( CHILD_ID_BBR_HC_JB, V_KWH );
+MyMessage msgBBR_HC_JB( CHILD_ID_BBR_HC_JB, V_KWH ); // en fait c'est des WH
 
 #define CHILD_ID_BBR_HP_JB 41
-MyMessage msgBBR_HP_JB( CHILD_ID_BBR_HP_JB, V_KWH );
+MyMessage msgBBR_HP_JB( CHILD_ID_BBR_HP_JB, V_KWH ); // en fait c'est des WH
 
 #define CHILD_ID_BBR_HC_JW 42
-MyMessage msgBBR_HC_JW( CHILD_ID_BBR_HC_JW, V_KWH );
+MyMessage msgBBR_HC_JW( CHILD_ID_BBR_HC_JW, V_KWH ); // en fait c'est des WH
 
 #define CHILD_ID_BBR_HP_JW 43
-MyMessage msgBBR_HP_JW( CHILD_ID_BBR_HP_JW, V_KWH );
+MyMessage msgBBR_HP_JW( CHILD_ID_BBR_HP_JW, V_KWH ); // en fait c'est des WH
 
 #define CHILD_ID_BBR_HC_JR 44
-MyMessage msgBBR_HC_JR( CHILD_ID_BBR_HC_JR, V_KWH );
+MyMessage msgBBR_HC_JR( CHILD_ID_BBR_HC_JR, V_KWH ); // en fait c'est des WH
 
 #define CHILD_ID_BBR_HP_JR 45
-MyMessage msgBBR_HP_JR( CHILD_ID_BBR_HP_JR, V_KWH );
+MyMessage msgBBR_HP_JR( CHILD_ID_BBR_HP_JR, V_KWH ); // en fait c'est des WH
 
 #define CHILD_ID_DEMAIN 46
-MyMessage msgDEMAIN( CHILD_ID_DEMAIN, V_KWH );
+MyMessage msgDEMAIN( CHILD_ID_DEMAIN, V_KWH ); // en fait c'est des WH
 
 // sert à EJP/BBR
 ///////////////////////////////////
@@ -103,13 +106,9 @@ MyMessage msgDEMAIN( CHILD_ID_DEMAIN, V_KWH );
 MyMessage msgHHPHC( CHILD_ID_HHPHC, V_VAR4 );
 
 // connexion série avec le compteur EDF
-SoftwareSerial tiSerial( TI_RX, TI_RX );
+SoftwareSerial tiSerial( TI_RX, TI_TX ); // dans les faits, le TX ne sert pas
 
 void setup() {
-	// // reduce clock speed (reduce power consumption)
-	// CLKPR = (1<<CLKPCE);
-	// CLKPR = B00000011; // should put the clock at 1Mhz
-
 #ifdef DEBUG_ENABLED
 	Serial.begin( 115200 );
 #endif
@@ -151,33 +150,27 @@ void setup() {
 typedef struct TeleInfo TeleInfo;
 struct TeleInfo {
 	// DOC ERDF - http://www.magdiblog.fr/wp-content/uploads/2014/09/ERDF-NOI-CPT_02E.pdf
-
-	char ADCO[12]; //Identifiant du compteur - m'en fous
-	char OPTARIF[4]; //Option tarifaire (type d’abonnement) - m'en fous
-	//     juste pour memoire, les values
-	//     BASE : option base
-	//     HC.. : option heure creuse
-	//     EJP. : option EJP
-	//     BBRx : option tempo, x est un char qui indique kkchose (relooooooou les mecs)
+	char ADCO[BUFSIZE]; //Identifiant du compteur - m'en fous
+	char OPTARIF[BUFSIZE]; //Option tarifaire (type d’abonnement) - m'en fous
+	// juste pour memoire, les values
+	// BASE : option base
+	// HC.. : option heure creuse
+	// EJP. : option EJP
+	// BBRx : option tempo, x est un char qui indique kkchose (relooooooou les mecs)
 	uint8_t ISOUSC; // : Intensité souscrite 2chars en Ampères - m'en fous
-	//uint32_t BASE; // Index si option = base (en Wh) - le probleme est qu'il semble qu'on recoive un *10000
-
+	uint32_t BASE; // Index si option = base (en Wh)
 	uint32_t HC_HC; // Index heures creuses si option = heures creuses (en Wh)
 	uint32_t HC_HP; // Index heures pleines si option = heures creuses (en Wh)
-
 	uint32_t EJP_HN; // Index heures normales si option = EJP (en Wh)
 	uint32_t EJP_HPM; // Index heures de pointe mobile si option = EJP (en Wh)
-
 	uint32_t BBR_HC_JB; // Index heures creuses jours bleus si option = tempo (en Wh)
 	uint32_t BBR_HP_JB; // Index heures pleines jours bleus si option = tempo (en Wh)
 	uint32_t BBR_HC_JW; // Index heures creuses jours blancs si option = tempo (en Wh)
 	uint32_t BBR_HP_JW; // Index heures pleines jours blancs si option = tempo (en Wh)
-	uint32_t BBR_HC_JR; // Index heures creuses jours rouges si option = tempo  (en Wh)
+	uint32_t BBR_HC_JR; // Index heures creuses jours rouges si option = tempo (en Wh)
 	uint32_t BBR_HP_JR; // Index heures pleines jours rouges si option = tempo (en Wh)
-
-	uint8_t  PEJP; // : Préavis EJP si option = EJP 30mn avant période EJP, en minutes
-
-	char PTEC[4]; // Période tarifaire en cours
+	uint8_t PEJP; // : Préavis EJP si option = EJP 30mn avant période EJP, en minutes
+	char PTEC[BUFSIZE]; // Période tarifaire en cours
 	// les valeurs de PTEC :
 	// - TH.. => Toutes les Heures.
 	// - HC.. => Heures Creuses.
@@ -190,19 +183,16 @@ struct TeleInfo {
 	// - HPJB => Heures Pleines Jours Bleus.
 	// - HPJW => Heures Pleines Jours Blancs (White).
 	// - HPJR => Heures Pleines Jours Rouges
-
-	char DEMAIN[4]; // Couleur du lendemain si option = tempo
+	char DEMAIN[BUFSIZE]; // Couleur du lendemain si option = tempo
 	// valeurs de DEMAIN
 	// - ---- : couleur du lendemain non connue
 	// - BLEU : le lendemain est jour BLEU.
 	// - BLAN : le lendemain est jour BLANC.
 	// - ROUG : le lendemain est jour ROUGE.
-
 	uint8_t IINST; // Intensité instantanée (en ampères)
-	uint8_t ADPS;  // Avertissement de dépassement de puissance souscrite (en ampères)
-	uint8_t IMAX;  // Intensité maximale (en ampères)
+	uint8_t ADPS; // Avertissement de dépassement de puissance souscrite (en ampères)
+	uint8_t IMAX; // Intensité maximale (en ampères)
 	uint32_t PAPP; // Puissance apparente (en Volt.ampères)
-
 	char HHPHC; // Groupe horaire si option = heures creuses ou tempo
 	// je comprend pas ce que veulent dire les valeurs de ce truc ... :
 	// L'horaire heures pleines/heures creuses (Groupe "HHPHC")
@@ -222,7 +212,7 @@ bool atolTI( char *label, char *searchLabel, char *value, uint32_t &last, MyMess
 	if ( strcmp( label, searchLabel ) != 0 )
 		return false;
 
-	tmp = atoi( value );
+	tmp = atol( value );
 	if ( last == tmp )
 		return true;
 
@@ -270,11 +260,11 @@ bool charTI( char *label, char *searchLabel, char &value, char &last, MyMessage 
 		return true;
 
 #ifdef DEBUG_ENABLED
-  Serial.print( label );
-  Serial.print( F(" changed from ") );
-  Serial.print( last );
-  Serial.print( F(" to ") );
-  Serial.println( value );
+	Serial.print( label );
+	Serial.print( F(" changed from ") );
+	Serial.print( last );
+	Serial.print( F(" to ") );
+	Serial.println( value );
 #endif
 
 	last = value;
@@ -290,14 +280,16 @@ bool strTI( char *label, char *searchLabel, char *value, char *last, MyMessage &
 		return true;
 
 #ifdef DEBUG_ENABLED
-  Serial.print( label );
-  Serial.print( F(" changed from ") );
-  Serial.print( last );
-  Serial.print( F(" to ") );
-  Serial.println( value );
+	Serial.print( label );
+	Serial.print( F(" changed from ") );
+	Serial.print( last );
+	Serial.print( F(" to ") );
+	Serial.println( value );
 #endif
 
-	strcpy(last, value);
+	memset( last, 0, BUFSIZE ); // sembleraie que strcpy ne fasse pas bien son boulot...
+	strcpy( last, value );
+
 	gw.send( msg.set( last ) );
 
 	return true;
@@ -306,9 +298,32 @@ bool strTI( char *label, char *searchLabel, char *value, char *last, MyMessage &
 void getTI() {
 	static TeleInfo last; // dernière lecture
 	char c; // le char qu'on read
+	byte nb = 0;
+
+	// enable this softSerial to listening - only if more than one softSerial is in use
+	tiSerial.listen();
+
+	// clear the softSerial buffer
+	// pas sur que ca serve vraiement en fait...
+	if ( tiSerial.overflow() ) {
+#ifdef DEBUG_ENABLED
+		Serial.println( F( "Serial overflow, flushing datas" ) );
+#endif
+		// j'ai des doutes, comme le compteur bombarde en permanence, on terminera jamais cette boucle...
+		while ( Serial.available() ) {
+  			c = tiSerial.read();
+#ifdef DEBUG_ENABLED
+		Serial.print( c );
+#endif
+		}
+#ifdef DEBUG_ENABLED
+		Serial.println( F( "Serial overflow end" ) );
+#endif
+	}
 
 	// tout d'abord on cherche une fin de ligne
 	while ( readTI() != '\n' );
+
 	// maintenant on cherche le label MOTDETAT (cad fin de trame)
 	// TIP: c'est le seul qui commence par un M!
 	bool sol = true; // start of line
@@ -318,11 +333,11 @@ void getTI() {
 			break;
 		sol = ( c == '\n' ); // fin de ligne trouvée, le prochain char sera en debut de ligne donc!
 	}
-	// eat the line
-	while ( readTI() != '\n' );
 
-	// ca y est, on peu bosser!
-	readLine:
+	readline:
+
+	// Cherche une fin de ligne pour etre sur de bien commencer au début d'une ligne ensuite
+	while ( readTI() != '\n' );
 
 	uint8_t i; // un compteur
 	uint8_t myCS = 32, cs; // le checksum
@@ -330,7 +345,7 @@ void getTI() {
 	// commencer par detecter le label (search for ' ')
 	i = 0;
 	char label[ BUFSIZE ]; // etiquette
-	memset( label, 0, BUFSIZE );
+	memset( label, '\0', BUFSIZE );
 	while ( true ) {
 		c = readTI();
 		myCS += (int)c;
@@ -342,10 +357,20 @@ void getTI() {
 			break; 
 	}
 
+	// rapidement on regarde si c'etait la fin de trame et on skip la suite dans ce cas
+	// the end ?
+	if ( strcmp( label, "MOTDETAT" ) == 0 ) { // on verifie pas le checksum de cette ligne
+#ifdef DEBUG_ENABLED
+		Serial.println( F( "------------------------" ) );
+		Serial.println( F( "GOT MOTDETAT -  bye " ) );
+#endif
+		return; // fin de trame
+	}
+
 	// la value (search for ' ')
 	i = 0;
-	char value[ BUFSIZE ];  // la value la plus longue ligne est ADCO / 15
-	memset( value, 0, BUFSIZE );
+	char value[ BUFSIZE ];  // la value la plus longue ligne est ADCO / ~15
+	memset( value, '\0', BUFSIZE );
 	while ( true ) {
 		c = readTI();
 		myCS += (int)c;
@@ -360,10 +385,8 @@ void getTI() {
 	// le checksum
 	cs = readTI();
 
-	// drop end of line char
-	readTI(); readTI(); // \r\n
-
 #ifdef DEBUG_ENABLED
+		Serial.println( F( "------------------------" ) );
 		Serial.print( F("GOT LABEL=") );
 		Serial.print( label );
 		Serial.print( F(" VALUE=") );
@@ -371,11 +394,6 @@ void getTI() {
 		Serial.print( F(" CHECKSUM=") );
 		Serial.println( cs, HEX );
 #endif
-
-	// now on regarde ce que cette ligne voulait bien nous dire
-	// the end ?
-	if ( strcmp( label, "MOTDETAT" ) == 0 ) // on verifie pas le checksum de cette ligne
-		return;
 
 	// check le checksum
 	myCS = (myCS & 0x3F) + 0x20;
@@ -386,38 +404,40 @@ void getTI() {
 		Serial.print( F(" CHECKSUM=") );
 		Serial.println( cs, HEX );
 #endif
-		goto readLine;
+
+		goto readline;
 	}
 
-	if ( strTI( label, "ADCO", value, last.ADCO, msgADCO ) )			goto readLine;
-	if ( strTI( label, "OPTARIF", value, last.OPTARIF, msgOPTARIF ) )	goto readLine;
-	if ( atoiTI( label, "ISOUSC", value, last.ISOUSC, msgISOUSC ) )		goto readLine;
-	//if ( atolTI( label, "BASE", value, last.BASE, msgBASE ) )			goto readLine;
+	// gestion mySensor, on va caster en fonction du bon type et ensuite vérifier si la value à changée et envoyer le message à la gateway si c'est le cas
+	if ( strTI( label, "ADCO", value, last.ADCO, msgADCO ) )			goto readline;
+	if ( strTI( label, "OPTARIF", value, last.OPTARIF, msgOPTARIF ) )	goto readline;
+	if ( atoiTI( label, "ISOUSC", value, last.ISOUSC, msgISOUSC ) )		goto readline;
+	if ( atolTI( label, "BASE", value, last.BASE, msgBASE ) )			goto readline;
 
-	if ( atolTI( label, "HCHC", value, last.HC_HC, msgHC_HC ) )			goto readLine;
-	if ( atolTI( label, "HCHP", value, last.HC_HP, msgHC_HP ) )			goto readLine;
+	if ( atolTI( label, "HCHC", value, last.HC_HC, msgHC_HC ) )			goto readline;
+	if ( atolTI( label, "HCHP", value, last.HC_HP, msgHC_HP ) )			goto readline;
 
-	if ( atolTI( label, "EJPHN", value, last.EJP_HN, msgEJP_HN ) )		goto readLine;
-	if ( atolTI( label, "EJPHPM", value, last.EJP_HPM, msgEJP_HPM ) )	goto readLine;
+	if ( atolTI( label, "EJPHN", value, last.EJP_HN, msgEJP_HN ) )		goto readline;
+	if ( atolTI( label, "EJPHPM", value, last.EJP_HPM, msgEJP_HPM ) )	goto readline;
 
-	if ( atolTI( label, "BBRHCJB", value, last.BBR_HC_JB, msgBBR_HC_JB ) ) goto readLine;
-	if ( atolTI( label, "BBRHPJB", value, last.BBR_HP_JB, msgBBR_HP_JB ) ) goto readLine;
-	if ( atolTI( label, "BBRHCJW", value, last.BBR_HC_JW, msgBBR_HC_JW ) ) goto readLine;
-	if ( atolTI( label, "BBRHPJW", value, last.BBR_HP_JW, msgBBR_HP_JW ) ) goto readLine;
-	if ( atolTI( label, "BBRHCJR", value, last.BBR_HC_JR, msgBBR_HC_JR ) ) goto readLine;
-	if ( atolTI( label, "BBRHPJR", value, last.BBR_HP_JR, msgBBR_HP_JR ) ) goto readLine;
+	if ( atolTI( label, "BBRHCJB", value, last.BBR_HC_JB, msgBBR_HC_JB ) ) goto readline;
+	if ( atolTI( label, "BBRHPJB", value, last.BBR_HP_JB, msgBBR_HP_JB ) ) goto readline;
+	if ( atolTI( label, "BBRHCJW", value, last.BBR_HC_JW, msgBBR_HC_JW ) ) goto readline;
+	if ( atolTI( label, "BBRHPJW", value, last.BBR_HP_JW, msgBBR_HP_JW ) ) goto readline;
+	if ( atolTI( label, "BBRHCJR", value, last.BBR_HC_JR, msgBBR_HC_JR ) ) goto readline;
+	if ( atolTI( label, "BBRHPJR", value, last.BBR_HP_JR, msgBBR_HP_JR ) ) goto readline;
 
-	if ( atoiTI( label, "PEJP", value, last.PEJP, msgPEJP ) )			goto readLine;
-	if ( strTI( label, "PTEC", value, last.PTEC, msgPTEC ) )			goto readLine;
+	if ( atoiTI( label, "PEJP", value, last.PEJP, msgPEJP ) )			goto readline;
+	if ( strTI( label, "PTEC", value, last.PTEC, msgPTEC ) )			goto readline;
 
-	if ( strTI( label, "DEMAIN", value, last.DEMAIN, msgDEMAIN ) )		goto readLine;
+	if ( strTI( label, "DEMAIN", value, last.DEMAIN, msgDEMAIN ) )		goto readline;
 
-	if ( atoiTI( label, "IINST", value, last.IINST, msgIINST ) )		goto readLine;
-	if ( atoiTI( label, "ADPS", value, last.ADPS, msgADPS ) )			goto readLine;
-	if ( atoiTI( label, "IMAX", value, last.IMAX, msgIMAX ) )			goto readLine;
-	if ( atolTI( label, "PAPP", value, last.PAPP, msgPAPP ) )			goto readLine;
+	if ( atoiTI( label, "IINST", value, last.IINST, msgIINST ) )		goto readline;
+	if ( atoiTI( label, "ADPS", value, last.ADPS, msgADPS ) )			goto readline;
+	if ( atoiTI( label, "IMAX", value, last.IMAX, msgIMAX ) )			goto readline;
+	if ( atolTI( label, "PAPP", value, last.PAPP, msgPAPP ) )			goto readline;
 
-	if ( charTI( label, "HHPHC", value[0], last.HHPHC, msgHHPHC ) )		goto readLine;
+	if ( charTI( label, "HHPHC", value[0], last.HHPHC, msgHHPHC ) )		goto readline;
 
 #ifdef DEBUG_ENABLED
 	Serial.print( F( "unkown LABEL=" ) );
@@ -427,12 +447,12 @@ void getTI() {
 #endif
 
 	// pour les cas non gérés
-	goto readLine;
+	goto readline;
 }
 
 void loop() {
 	getTI();
 
-	// attendre avant prochaine lecture
-	gw.sleep( SLEEP_TIME );
+	delay( SLEEP_TIME );
+	//gw.sleep( SLEEP_TIME );
 }
