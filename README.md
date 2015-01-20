@@ -6,6 +6,7 @@ Fonctionne sur un arduino mini pro 3.3v
 # Schéma de cablage
 ![Schéma de cablage](https://raw.githubusercontent.com/jaysee/mySensors-TeleInfo/master/Cablage%20t%C3%A9l%C3%A9info.png)
 
+NOTE: Le schéma indique de connecter la resistance sur le 5v, si votre adruino est en 3.3v, connectez sur le 3.3 (c'est à dire VCC)
 
 # Crédits
 
