@@ -1,5 +1,5 @@
 // uncomment to enable debuging using serial port @115200bps
-//#define DEBUG_ENABLED
+#define DEBUG_ENABLED
 
 // durée entre 2 rafraichissements des données - en mili-secondes (bien laisser UL la fin)
 // j'ai un probleme, il met 3 fois plus de temps que ce que j'indique!
@@ -13,10 +13,9 @@
 // teleinfo
 #include <SoftwareSerial.h>
 #define TI_RX 4
-#define TI_TX 5
 
 // version du sketch
-#define VERSION "0.3"
+#define VERSION "0.4c"
 
 // longueur max des données qu'on reçoit
 #define BUFSIZE 15
@@ -31,82 +30,58 @@ MySensor gw;
 // infos générales
 ///////////////////////////////////
 #define CHILD_ID_ADCO 0
-MyMessage msgADCO( CHILD_ID_ADCO, V_VAR1 );
+MyMessage msgVAR1( 0, V_VAR1 );
 
 #define CHILD_ID_OPTARIF 1
-MyMessage msgOPTARIF( CHILD_ID_OPTARIF, V_VAR2 );
+MyMessage msgVAR2( 0, V_VAR2 );
 
 #define CHILD_ID_ISOUSC 2
-MyMessage msgISOUSC( CHILD_ID_ISOUSC, V_CURRENT );
+MyMessage msgCURRENT( 0, V_CURRENT );
 
 #define CHILD_ID_PTEC 3
-MyMessage msgPTEC( CHILD_ID_PTEC, V_VAR3 );
+MyMessage msgVAR3( 0, V_VAR3 );
 
 #define CHILD_ID_IINST 4
-MyMessage msgIINST( CHILD_ID_IINST, V_CURRENT );
-
 #define CHILD_ID_ADPS 5
-MyMessage msgADPS( CHILD_ID_ADPS, V_CURRENT );
-
 #define CHILD_ID_IMAX 6
-MyMessage msgIMAX( CHILD_ID_IMAX, V_CURRENT );
-
 #define CHILD_ID_PAPP 7
-MyMessage msgPAPP( CHILD_ID_PAPP, V_WATT ); // pas vrai c'est des VA!
+
+MyMessage msgWATT( 0, V_WATT ); // pas vrai c'est des VA!
 
 // infos tarif BASE
 ///////////////////////////////////
 #define CHILD_ID_BASE 10
-MyMessage msgBASE( CHILD_ID_BASE, V_KWH ); // en fait c'est des WH
+MyMessage msgKWH( 0, V_KWH ); // en fait c'est des WH
 
 // infos tarif HC/HP
 ///////////////////////////////////
 #define CHILD_ID_HC_HC 20
-MyMessage msgHC_HC( CHILD_ID_HC_HC, V_KWH ); // en fait c'est des WH
-
 #define CHILD_ID_HC_HP 21
-MyMessage msgHC_HP( CHILD_ID_HC_HP, V_KWH) ; // en fait c'est des WH
 
 // infos EJP
 #define CHILD_ID_EJP_HN 30
-MyMessage msgEJP_HN( CHILD_ID_EJP_HN, V_KWH ); // en fait c'est des WH
-
 #define CHILD_ID_EJP_HPM 31
-MyMessage msgEJP_HPM( CHILD_ID_EJP_HPM, V_KWH ); // en fait c'est des WH
-
 #define CHILD_ID_PEJP 32
-MyMessage msgPEJP( CHILD_ID_PEJP, V_KWH ); // ya pas de type pour des durées...
 
 // infos tarif BBR (tempo)
 ///////////////////////////////////
 #define CHILD_ID_BBR_HC_JB 40
-MyMessage msgBBR_HC_JB( CHILD_ID_BBR_HC_JB, V_KWH ); // en fait c'est des WH
-
 #define CHILD_ID_BBR_HP_JB 41
-MyMessage msgBBR_HP_JB( CHILD_ID_BBR_HP_JB, V_KWH ); // en fait c'est des WH
-
 #define CHILD_ID_BBR_HC_JW 42
-MyMessage msgBBR_HC_JW( CHILD_ID_BBR_HC_JW, V_KWH ); // en fait c'est des WH
-
 #define CHILD_ID_BBR_HP_JW 43
-MyMessage msgBBR_HP_JW( CHILD_ID_BBR_HP_JW, V_KWH ); // en fait c'est des WH
-
 #define CHILD_ID_BBR_HC_JR 44
-MyMessage msgBBR_HC_JR( CHILD_ID_BBR_HC_JR, V_KWH ); // en fait c'est des WH
-
 #define CHILD_ID_BBR_HP_JR 45
-MyMessage msgBBR_HP_JR( CHILD_ID_BBR_HP_JR, V_KWH ); // en fait c'est des WH
-
 #define CHILD_ID_DEMAIN 46
-MyMessage msgDEMAIN( CHILD_ID_DEMAIN, V_KWH ); // en fait c'est des WH
+
+MyMessage msgVAR5( 0, V_VAR5 );
 
 // sert à EJP/BBR
 ///////////////////////////////////
 #define CHILD_ID_HHPHC 50
-MyMessage msgHHPHC( CHILD_ID_HHPHC, V_VAR4 );
+MyMessage msgVAR4( 0, V_VAR4 );
 
 // connexion série avec le compteur EDF
-SoftwareSerial tiSerial( TI_RX, TI_TX ); // dans les faits, le TX ne sert pas
+SoftwareSerial tiSerial( TI_RX, TI_RX ); // dans les faits, le TX ne sert pas
 
 void setup() {
 #ifdef DEBUG_ENABLED
@@ -206,7 +181,7 @@ char readTI() {
 	return tiSerial.read() & 0x7F;
 }
 
-bool atolTI( char *label, char *searchLabel, char *value, uint32_t &last, MyMessage &msg ) {
+bool compareTI( char *label, char *searchLabel, char *value, uint32_t &last, MyMessage &msg, int SENSOR_ID ) {
 	uint32_t tmp;
 
 	if ( strcmp( label, searchLabel ) != 0 )
@@ -225,11 +200,11 @@ bool atolTI( char *label, char *searchLabel, char *value, uint32_t &last, MyMess
 #endif
 
 	last = tmp;
-	gw.send( msg.set( last ) );
+	gw.send( msg.setSensor( SENSOR_ID ).set( last ) );
 
 	return true;
 }
-bool atoiTI( char *label, char *searchLabel, char *value, uint8_t &last, MyMessage &msg ) {
+bool compareTI( char *label, char *searchLabel, char *value, uint8_t &last, MyMessage &msg, int SENSOR_ID ) {
 	uint8_t tmp;
 
 	if ( strcmp( label, searchLabel ) != 0 )
@@ -248,11 +223,11 @@ bool atoiTI( char *label, char *searchLabel, char *value, uint8_t &last, MyMessa
 #endif
 
 	last = tmp;
-	gw.send( msg.set( last ) );
+	gw.send( msg.setSensor( SENSOR_ID ).set( last ) );
 
 	return true;
 }
-bool charTI( char *label, char *searchLabel, char &value, char &last, MyMessage &msg ) {
+bool compareTI( char *label, char *searchLabel, char &value, char &last, MyMessage &msg, int SENSOR_ID ) {
 	if ( strcmp( label, searchLabel ) != 0 )
 		return false;
 
@@ -268,11 +243,11 @@ bool charTI( char *label, char *searchLabel, char &value, char &last, MyMessage 
 #endif
 
 	last = value;
-	gw.send( msg.set( last ) );
+	gw.send( msg.setSensor( SENSOR_ID ).set( last ) );
 
 	return true;
 }
-bool strTI( char *label, char *searchLabel, char *value, char *last, MyMessage &msg ) {
+bool compareTI( char *label, char *searchLabel, char *value, char *last, MyMessage &msg, int SENSOR_ID ) {
 	if ( strcmp( label, searchLabel ) != 0 )
 		return false;
 
@@ -290,7 +265,7 @@ bool strTI( char *label, char *searchLabel, char *value, char *last, MyMessage &
 	memset( last, 0, BUFSIZE ); // sembleraie que strcpy ne fasse pas bien son boulot...
 	strcpy( last, value );
 
-	gw.send( msg.set( last ) );
+	gw.send( msg.setSensor( SENSOR_ID ).set( last ) );
 
 	return true;
 }
@@ -408,36 +383,36 @@ void getTI() {
 		goto readline;
 	}
 
-	// gestion mySensor, on va caster en fonction du bon type et ensuite vérifier si la value à changée et envoyer le message à la gateway si c'est le cas
-	if ( strTI( label, "ADCO", value, last.ADCO, msgADCO ) )			goto readline;
-	if ( strTI( label, "OPTARIF", value, last.OPTARIF, msgOPTARIF ) )	goto readline;
-	if ( atoiTI( label, "ISOUSC", value, last.ISOUSC, msgISOUSC ) )		goto readline;
-	if ( atolTI( label, "BASE", value, last.BASE, msgBASE ) )			goto readline;
+	// gestion mySensor, vérifier si la value à changée et envoyer le message à la gateway si c'est le cas
+	if ( compareTI( label, "ADCO", value, last.ADCO, msgVAR1, CHILD_ID_ADCO ) )			goto readline;
+	if ( compareTI( label, "OPTARIF", value, last.OPTARIF, msgVAR2, CHILD_ID_OPTARIF ) )	goto readline;
+	if ( compareTI( label, "ISOUSC", value, last.ISOUSC, msgCURRENT, CHILD_ID_ISOUSC ) )		goto readline;
+	if ( compareTI( label, "BASE", value, last.BASE, msgKWH, CHILD_ID_BASE ) )			goto readline;
 
-	if ( atolTI( label, "HCHC", value, last.HC_HC, msgHC_HC ) )			goto readline;
-	if ( atolTI( label, "HCHP", value, last.HC_HP, msgHC_HP ) )			goto readline;
+	if ( compareTI( label, "HCHC", value, last.HC_HC, msgKWH, CHILD_ID_HC_HC ) )			goto readline;
+	if ( compareTI( label, "HCHP", value, last.HC_HP, msgKWH, CHILD_ID_HC_HP ) )			goto readline;
 
-	if ( atolTI( label, "EJPHN", value, last.EJP_HN, msgEJP_HN ) )		goto readline;
-	if ( atolTI( label, "EJPHPM", value, last.EJP_HPM, msgEJP_HPM ) )	goto readline;
+	if ( compareTI( label, "EJPHN", value, last.EJP_HN, msgKWH, CHILD_ID_EJP_HN ) )		goto readline;
+	if ( compareTI( label, "EJPHPM", value, last.EJP_HPM, msgKWH, CHILD_ID_EJP_HPM ) )	goto readline;
 
-	if ( atolTI( label, "BBRHCJB", value, last.BBR_HC_JB, msgBBR_HC_JB ) ) goto readline;
-	if ( atolTI( label, "BBRHPJB", value, last.BBR_HP_JB, msgBBR_HP_JB ) ) goto readline;
-	if ( atolTI( label, "BBRHCJW", value, last.BBR_HC_JW, msgBBR_HC_JW ) ) goto readline;
-	if ( atolTI( label, "BBRHPJW", value, last.BBR_HP_JW, msgBBR_HP_JW ) ) goto readline;
-	if ( atolTI( label, "BBRHCJR", value, last.BBR_HC_JR, msgBBR_HC_JR ) ) goto readline;
-	if ( atolTI( label, "BBRHPJR", value, last.BBR_HP_JR, msgBBR_HP_JR ) ) goto readline;
+	if ( compareTI( label, "BBRHCJB", value, last.BBR_HC_JB, msgKWH, CHILD_ID_BBR_HC_JB ) ) goto readline;
+	if ( compareTI( label, "BBRHPJB", value, last.BBR_HP_JB, msgKWH, CHILD_ID_BBR_HP_JB ) ) goto readline;
+	if ( compareTI( label, "BBRHCJW", value, last.BBR_HC_JW, msgKWH, CHILD_ID_BBR_HC_JW ) ) goto readline;
+	if ( compareTI( label, "BBRHPJW", value, last.BBR_HP_JW, msgKWH, CHILD_ID_BBR_HP_JW ) ) goto readline;
+	if ( compareTI( label, "BBRHCJR", value, last.BBR_HC_JR, msgKWH, CHILD_ID_BBR_HC_JR ) ) goto readline;
+	if ( compareTI( label, "BBRHPJR", value, last.BBR_HP_JR, msgKWH, CHILD_ID_BBR_HP_JR ) ) goto readline;
 
-	if ( atoiTI( label, "PEJP", value, last.PEJP, msgPEJP ) )			goto readline;
-	if ( strTI( label, "PTEC", value, last.PTEC, msgPTEC ) )			goto readline;
+	if ( compareTI( label, "PEJP", value, last.PEJP, msgKWH, CHILD_ID_PEJP ) )			goto readline;
+	if ( compareTI( label, "PTEC", value, last.PTEC, msgVAR3, CHILD_ID_PTEC ) )			goto readline;
 
-	if ( strTI( label, "DEMAIN", value, last.DEMAIN, msgDEMAIN ) )		goto readline;
+	if ( compareTI( label, "DEMAIN", value, last.DEMAIN, msgVAR5, CHILD_ID_DEMAIN ) )		goto readline;
 
-	if ( atoiTI( label, "IINST", value, last.IINST, msgIINST ) )		goto readline;
-	if ( atoiTI( label, "ADPS", value, last.ADPS, msgADPS ) )			goto readline;
-	if ( atoiTI( label, "IMAX", value, last.IMAX, msgIMAX ) )			goto readline;
-	if ( atolTI( label, "PAPP", value, last.PAPP, msgPAPP ) )			goto readline;
+	if ( compareTI( label, "IINST", value, last.IINST, msgCURRENT, CHILD_ID_IINST ) )		goto readline;
+	if ( compareTI( label, "ADPS", value, last.ADPS, msgCURRENT, CHILD_ID_ADPS ) )			goto readline;
+	if ( compareTI( label, "IMAX", value, last.IMAX, msgCURRENT, CHILD_ID_IMAX ) )			goto readline;
+	if ( compareTI( label, "PAPP", value, last.PAPP, msgWATT, CHILD_ID_PAPP ) )			goto readline;
 
-	if ( charTI( label, "HHPHC", value[0], last.HHPHC, msgHHPHC ) )		goto readline;
+	if ( compareTI( label, "HHPHC", value[0], last.HHPHC, msgVAR4, CHILD_ID_HHPHC ) )		goto readline;
 
 #ifdef DEBUG_ENABLED
 	Serial.print( F( "unkown LABEL=" ) );
@@ -451,6 +426,9 @@ void getTI() {
 }
 
 void loop() {
+	// Process incoming messages (like config from server)
+	gw.process(); 
+	
 	getTI();
 
 	delay( SLEEP_TIME );
