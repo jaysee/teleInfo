@@ -1,5 +1,5 @@
 // uncomment to enable debuging using serial port @115200bps
-#define DEBUG_ENABLED
+//#define DEBUG_ENABLED
 
 // durée entre 2 rafraichissements des données - en mili-secondes (bien laisser UL la fin)
 // j'ai un probleme, il met 3 fois plus de temps que ce que j'indique!
