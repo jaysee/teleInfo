@@ -4,7 +4,7 @@
 // to enable debug, uncomment this line
 //#define DEBUG_TI
 
-#define TI_VERSION "0.6"
+#define TI_VERSION "0.6b"
 
 #if ARDUINO >= 100
 	#include <Arduino.h> // Arduino 1.0
@@ -26,18 +26,6 @@ struct teleInfo_t {
 	// EJP. : option EJP
 	// BBRx : option tempo, x est un char qui indique kkchose (relooooooou les mecs)
 	uint8_t ISOUSC; // : Intensité souscrite 2chars en Ampères - m'en fous
-	uint32_t BASE; // Index si option = base (en Wh)
-	uint32_t HC_HC; // Index heures creuses si option = heures creuses (en Wh)
-	uint32_t HC_HP; // Index heures pleines si option = heures creuses (en Wh)
-	uint32_t EJP_HN; // Index heures normales si option = EJP (en Wh)
-	uint32_t EJP_HPM; // Index heures de pointe mobile si option = EJP (en Wh)
-	uint32_t BBR_HC_JB; // Index heures creuses jours bleus si option = tempo (en Wh)
-	uint32_t BBR_HP_JB; // Index heures pleines jours bleus si option = tempo (en Wh)
-	uint32_t BBR_HC_JW; // Index heures creuses jours blancs si option = tempo (en Wh)
-	uint32_t BBR_HP_JW; // Index heures pleines jours blancs si option = tempo (en Wh)
-	uint32_t BBR_HC_JR; // Index heures creuses jours rouges si option = tempo (en Wh)
-	uint32_t BBR_HP_JR; // Index heures pleines jours rouges si option = tempo (en Wh)
-	uint8_t PEJP; // : Préavis EJP si option = EJP 30mn avant période EJP, en minutes
 	char PTEC[BUFSIZE]; // Période tarifaire en cours
 	// les valeurs de PTEC :
 	// - TH.. => Toutes les Heures.
@@ -51,26 +39,52 @@ struct teleInfo_t {
 	// - HPJB => Heures Pleines Jours Bleus.
 	// - HPJW => Heures Pleines Jours Blancs (White).
 	// - HPJR => Heures Pleines Jours Rouges
+	uint8_t IINST; // Intensité instantanée (en ampères)
+	uint8_t ADPS; // Avertissement de dépassement de puissance souscrite (en ampères)
+	uint8_t IMAX; // Intensité maximale (en ampères)
+	uint32_t PAPP; // Puissance apparente (en Volt.ampères)
+
+	uint32_t BASE; // Index si option = base (en Wh)
+
+	uint32_t HC_HC; // Index heures creuses si option = heures creuses (en Wh)
+	uint32_t HC_HP; // Index heures pleines si option = heures creuses (en Wh)
+
+	uint32_t EJP_HN; // Index heures normales si option = EJP (en Wh)
+	uint32_t EJP_HPM; // Index heures de pointe mobile si option = EJP (en Wh)
+	uint8_t PEJP; // : Préavis EJP si option = EJP 30mn avant période EJP, en minutes
+
+	uint32_t BBR_HC_JB; // Index heures creuses jours bleus si option = tempo (en Wh)
+	uint32_t BBR_HP_JB; // Index heures pleines jours bleus si option = tempo (en Wh)
+	uint32_t BBR_HC_JW; // Index heures creuses jours blancs si option = tempo (en Wh)
+	uint32_t BBR_HP_JW; // Index heures pleines jours blancs si option = tempo (en Wh)
+	uint32_t BBR_HC_JR; // Index heures creuses jours rouges si option = tempo (en Wh)
+	uint32_t BBR_HP_JR; // Index heures pleines jours rouges si option = tempo (en Wh)
 	char DEMAIN[BUFSIZE]; // Couleur du lendemain si option = tempo
 	// valeurs de DEMAIN
 	// - ---- : couleur du lendemain non connue
 	// - BLEU : le lendemain est jour BLEU.
 	// - BLAN : le lendemain est jour BLANC.
 	// - ROUG : le lendemain est jour ROUGE.
-	uint8_t IINST; // Intensité instantanée (en ampères)
-	uint8_t ADPS; // Avertissement de dépassement de puissance souscrite (en ampères)
-	uint8_t IMAX; // Intensité maximale (en ampères)
-	uint32_t PAPP; // Puissance apparente (en Volt.ampères)
 	char HHPHC; // Groupe horaire si option = heures creuses ou tempo
 	// je comprend pas ce que veulent dire les valeurs de ce truc ... :
 	// L'horaire heures pleines/heures creuses (Groupe "HHPHC")
 	// est codé par le caractère alphanumérique A, C, D, E ou Y correspondant à la programmation du compteur.
 
-	// init char(*) members
+	// init members
 	teleInfo_t() :
 		ADCO( {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'} ),
 		OPTARIF( {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'} ),
+		ISOUSC( 0 ),
 		PTEC( {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'} ),
+		IINST( 0 ),
+		ADPS( 0 ),
+		IMAX( 0 ),
+		PAPP( 0 ),
+
+		BASE( 0 ),
+		HC_HC( 0 ),	HC_HP( 0 ),
+		EJP_HN( 0 ), EJP_HPM( 0 ), PEJP( 0 ),
+		BBR_HC_JB( 0 ), BBR_HP_JB( 0 ), BBR_HC_JW( 0 ), BBR_HP_JW( 0 ), BBR_HC_JR( 0 ), BBR_HP_JR( 0 ),
 		DEMAIN( {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'} ),
 		HHPHC( { '\0' } )
 		{}
