@@ -4,12 +4,14 @@ Librairie arduino permettant de lire la téléinfo d'un compteur ERDF français.
 Testé sur un arduino mini pro 3.3v.
 
 # Installation
-Copier le dossier dans votre répertoire librairies d'Arduino, relancez Arduino, importez les exemples
+Copier le dossier dans votre répertoire librairies d'Arduino, relancez Arduino, importez les exemples (Fichiers -> Exemples -> teleInfo -> basics/mySensors)
+
+**CF:** http://arduino.cc/en/Guide/Libraries
 
 # Schéma de cablage
 ![Schéma de cablage](https://raw.githubusercontent.com/jaysee/mySensors-TeleInfo/master/Cablage%20t%C3%A9l%C3%A9info.png)
 
-NOTE: Le schéma indique de connecter la resistance sur le 5v, si votre adruino est en 3.3v, connectez sur le 3.3 (c'est à dire VCC)
+**NOTE:** Le schéma indique de connecter la resistance sur le 5v, si votre adruino est en 3.3v, connectez sur le 3.3 (c'est à dire VCC)
 
 # mySensors
 
