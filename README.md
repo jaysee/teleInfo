@@ -17,7 +17,7 @@ Copier le dossier dans votre répertoire librairies d'Arduino, relancez Arduino,
 
 Dans les exemples vous trouverez le code pour transmettre ces informations à une passerelle mySensors.
 
-IMPORTANT: utilisez la version dev du github mysensors sinon vous aurez une erreur de compilation
+IMPORTANT: utilisez la ![version dev](https://github.com/mysensors/Arduino/tree/development) du github mysensors sinon vous aurez une erreur de compilation
 
 
 # Crédits
