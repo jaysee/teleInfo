@@ -1,12 +1,22 @@
-# mySensors-TeleInfo
-Permet d'envoyer la téléinfo d'un compteur EDF vers une passerelle mySensors
+# arduino-TeleInfo
+Librairie arduino permettant de lire la téléinfo d'un compteur ERDF français.
 
-Fonctionne sur un arduino mini pro 3.3v
+Testé sur un arduino mini pro 3.3v.
+
+# Installation
+Copier le dossier dans votre répertoire librairies d'Arduino, relancez Arduino, importez les exemples
 
 # Schéma de cablage
 ![Schéma de cablage](https://raw.githubusercontent.com/jaysee/mySensors-TeleInfo/master/Cablage%20t%C3%A9l%C3%A9info.png)
 
 NOTE: Le schéma indique de connecter la resistance sur le 5v, si votre adruino est en 3.3v, connectez sur le 3.3 (c'est à dire VCC)
+
+# mySensors
+
+Dans les exemples vous trouverez le code pour transmettre ces informations à une passerelle mySensors.
+
+IMPORTANT: utilisez la version dev du github mysensors sinon vous aurez une erreur de compilation
+
 
 # Crédits
 
