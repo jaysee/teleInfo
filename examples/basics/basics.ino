@@ -1,6 +1,6 @@
 // teleinfo
 #include <SoftwareSerial.h>
-#include "teleInfo.h"
+#include <teleInfo.h>
 #define TI_RX 4
 teleInfo TI( TI_RX );
 
@@ -20,8 +20,8 @@ void loop() {
 	// read téléinfo
 	currentTI = TI.get();
 
-	// gestion mySensor, vérifier si la value à changée et envoyer le message à la gateway si c'est le cas
-	print( F( "ADCO" ), currentTI.ADCO );
+	// Affiche les infos récupérée sur la console série
+	PRINT_TI( F( "ADCO" ), currentTI.ADCO );
 	PRINT_TI( F( "OPTARIF" ), currentTI.OPTARIF );
 	PRINT_TI( F( "ISOUSC" ), currentTI.ISOUSC );
 	PRINT_TI( F( "PTEC" ), currentTI.PTEC );
@@ -50,5 +50,5 @@ void loop() {
 
 	PRINT_TI( F( "HHPHC" ), currentTI.HHPHC );
 
-	delay( SLEEP_TIME );
+	delay( 10000 );
 }
