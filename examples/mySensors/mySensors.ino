@@ -7,9 +7,12 @@
 //#define SLEEP_TIME 20000UL
 #define SLEEP_TIME 10000UL
 
+#define MY_RADIO_NRF24
+#define MY_RF24_PA_LEVEL RF24_PA_LOW
+
 // mysensors
 #include <SPI.h>
-#include <MySensor.h>
+#include <MySensors.h>
 
 // teleinfo
 #include <SoftwareSerial.h>
@@ -19,8 +22,6 @@ teleInfo TI( TI_RX );
 
 // longueur max des données qu'on reçoit
 #define BUFSIZE 15
-
-MySensor gw;
 
 // paramètres des données téléinfo
 // - ne pas toucher :)
@@ -92,8 +93,7 @@ void setup() {
 	Serial.begin( 115200 );
 #endif
 
-	gw.begin();
-	gw.sendSketchInfo( "Teleinfo Sensor", TI.VERSION );
+	sendSketchInfo( "Teleinfo Sensor", TI.VERSION );
 
 	// une première lecture va nous donner l'option tarifaire
 	// on va s'en servir pour présenter uniquement les bons messages a la gateway
@@ -101,38 +101,38 @@ void setup() {
 	currentTI = TI.get();
 
 	// communs a tout le monde
-	gw.present( CHILD_ID_ADCO, S_POWER );
-	gw.present( CHILD_ID_OPTARIF, S_POWER );
-	gw.present( CHILD_ID_ISOUSC, S_POWER );
-	gw.present( CHILD_ID_PTEC, S_POWER );
-	gw.present( CHILD_ID_IINST, S_POWER );
-	gw.present( CHILD_ID_ADPS, S_POWER );
-	gw.present( CHILD_ID_IMAX, S_POWER );
-	gw.present( CHILD_ID_PAPP, S_POWER );
+	present( CHILD_ID_ADCO, S_POWER );
+	present( CHILD_ID_OPTARIF, S_POWER );
+	present( CHILD_ID_ISOUSC, S_POWER );
+	present( CHILD_ID_PTEC, S_POWER );
+	present( CHILD_ID_IINST, S_POWER );
+	present( CHILD_ID_ADPS, S_POWER );
+	present( CHILD_ID_IMAX, S_POWER );
+	present( CHILD_ID_PAPP, S_POWER );
 
 	if ( strcmp( currentTI.OPTARIF, "BASE" ) == 0 ) {
-		gw.present( CHILD_ID_BASE, S_POWER );
+		present( CHILD_ID_BASE, S_POWER );
 
 		tarif = TARIF_BASE;
 	} else if ( strcmp( currentTI.OPTARIF, "HC.." ) == 0 ) {
-		gw.present( CHILD_ID_HC_HC, S_POWER );
-		gw.present( CHILD_ID_HC_HP, S_POWER );
+		present( CHILD_ID_HC_HC, S_POWER );
+		present( CHILD_ID_HC_HP, S_POWER );
 
 		tarif = TARIF_HCHP;
 	} else if ( strcmp( currentTI.OPTARIF, "EJP." ) == 0 ) {
-		gw.present( CHILD_ID_EJP_HN, S_POWER );
-		gw.present( CHILD_ID_EJP_HPM, S_POWER );
-		gw.present( CHILD_ID_PEJP, S_POWER );
+		present( CHILD_ID_EJP_HN, S_POWER );
+		present( CHILD_ID_EJP_HPM, S_POWER );
+		present( CHILD_ID_PEJP, S_POWER );
 
 		tarif = TARIF_EJP;
 	} else if ( strstr( currentTI.OPTARIF, "BBR" ) != NULL ) { // ! c'est BBRx (x varie) d'ou un strstr et non strcmp
-		gw.present( CHILD_ID_BBR_HC_JB, S_POWER );
-		gw.present( CHILD_ID_BBR_HP_JB, S_POWER );
-		gw.present( CHILD_ID_BBR_HC_JW, S_POWER );
-		gw.present( CHILD_ID_BBR_HP_JW, S_POWER );
-		gw.present( CHILD_ID_BBR_HC_JR, S_POWER );
-		gw.present( CHILD_ID_BBR_HP_JR, S_POWER );
-		gw.present( CHILD_ID_DEMAIN, S_POWER );
+		present( CHILD_ID_BBR_HC_JB, S_POWER );
+		present( CHILD_ID_BBR_HP_JB, S_POWER );
+		present( CHILD_ID_BBR_HC_JW, S_POWER );
+		present( CHILD_ID_BBR_HP_JW, S_POWER );
+		present( CHILD_ID_BBR_HC_JR, S_POWER );
+		present( CHILD_ID_BBR_HP_JR, S_POWER );
+		present( CHILD_ID_DEMAIN, S_POWER );
 
 		tarif = TARIF_TEMPO;
 	}
@@ -153,7 +153,7 @@ void setup() {
 
 	// cas particulier, appartient a EJP et TEMPO
 	if ( (tarif & TARIF_EJP) || (tarif & TARIF_TEMPO) ) {
-		gw.present( CHILD_ID_HHPHC, S_POWER );
+		present( CHILD_ID_HHPHC, S_POWER );
 	}
 }
 
@@ -172,7 +172,7 @@ bool compareTI( const __FlashStringHelper *label, uint32_t value, uint32_t &last
 #endif
 
 	last = value;
-	gw.send( msg.setSensor( SENSOR_ID ).set( last ) );
+	send( msg.setSensor( SENSOR_ID ).set( last ) );
 
 	return true;
 }
@@ -189,7 +189,7 @@ bool compareTI( const __FlashStringHelper *label, uint8_t value, uint8_t &last, 
 #endif
 
 	last = value;
-	gw.send( msg.setSensor( SENSOR_ID ).set( last ) );
+	send( msg.setSensor( SENSOR_ID ).set( last ) );
 
 	return true;
 }
@@ -206,7 +206,7 @@ bool compareTI( const __FlashStringHelper *label, char value, char &last, MyMess
 #endif
 
 	last = value;
-	gw.send( msg.setSensor( SENSOR_ID ).set( last ) );
+	send( msg.setSensor( SENSOR_ID ).set( last ) );
 
 	return true;
 }
@@ -225,7 +225,7 @@ bool compareTI( const __FlashStringHelper *label, char *value, char *last, MyMes
 	memset( last, 0, BUFSIZE );
 	strcpy( last, value );
 
-	gw.send( msg.setSensor( SENSOR_ID ).set( last ) );
+	send( msg.setSensor( SENSOR_ID ).set( last ) );
 
 	return true;
 }
@@ -234,7 +234,7 @@ void loop() {
 	teleInfo_t currentTI;
 
 	// Process incoming messages (like config from server)
-	gw.process(); 
+	//process(); 
 	
 	// read téléinfo
 	currentTI = TI.get();
