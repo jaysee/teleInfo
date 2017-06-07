@@ -17,8 +17,7 @@ Copier le dossier dans votre répertoire librairies d'Arduino, relancez Arduino,
 
 Dans les exemples vous trouverez le code pour transmettre ces informations à une passerelle mySensors.
 
-IMPORTANT: utilisez cette ![version de dev 1.4](https://github.com/mysensors/Arduino/tree/f796c677cddf6b9fd78ef4d66318c51d5650a14a) du github mysensors sinon vous aurez une erreur de compilation
-
+A ce jour les exemples sont compatibles avec mySensor 2
 
 # Crédits
 
@@ -27,3 +26,4 @@ Pour créer ce projet je me suis inspiré des projets et doc suivants :
 * Version de Filoucaenais - https://forum.jeedom.fr/viewtopic.php?f=35&t=1737
 * Librairie InterfaceCOmpteurERDF de mea-edomus - https://code.google.com/p/mea-edomus/source/detail?r=1ab529c296c460fa76b717d8f12fd0fedaacda4f
 * Documentation officielle ERDF - http://www.magdiblog.fr/wp-content/uploads/2014/09/ERDF-NOI-CPT_02E.pdf
+* @Fighter777 pour la mise à jour vers mySensor 2
