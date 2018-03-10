@@ -40,9 +40,16 @@ struct teleInfo_t {
 	// - HPJW => Heures Pleines Jours Blancs (White).
 	// - HPJR => Heures Pleines Jours Rouges
 	uint8_t IINST; // Intensité instantanée (en ampères)
+	uint8_t IINST1; // Intensité instantanée triphasé phase1 (en ampères)
+	uint8_t IINST2; // Intensité instantanée triphasé phase2 (en ampères)
+	uint8_t IINST3; // Intensité instantanée triphasé phase3 (en ampères)
 	uint8_t ADPS; // Avertissement de dépassement de puissance souscrite (en ampères)
 	uint8_t IMAX; // Intensité maximale (en ampères)
+	uint8_t IMAX1; // Intensité maximale triphasé phase1 (en ampères)
+	uint8_t IMAX2; // Intensité maximale triphasé phase2 (en ampères)
+	uint8_t IMAX3; // Intensité maximale triphasé phase3 (en ampères)
 	uint32_t PAPP; // Puissance apparente (en Volt.ampères)
+	uint32_t PMAX; // Puissance apparente max (en Volt.ampères)
 
 	uint32_t BASE; // Index si option = base (en Wh)
 
@@ -77,9 +84,16 @@ struct teleInfo_t {
 		ISOUSC( 0 ),
 		PTEC( {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'} ),
 		IINST( 0 ),
+		IINST1( 0 ),
+		IINST2( 0 ),
+		IINST3( 0 ),
 		ADPS( 0 ),
 		IMAX( 0 ),
+		IMAX1( 0 ),
+		IMAX2( 0 ),
+		IMAX3( 0 ),
 		PAPP( 0 ),
+		PMAX( 0 ),
 
 		BASE( 0 ),
 		HC_HC( 0 ),	HC_HP( 0 ),
