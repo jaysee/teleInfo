@@ -187,9 +187,16 @@ teleInfo_t teleInfo::get() {
 	if ( save( label, "DEMAIN", value, res.DEMAIN ) )	goto readline;
 
 	if ( save( label, "IINST", value, res.IINST ) )		goto readline;
+	if ( save( label, "IINST1", value, res.IINST1 ) )   goto readline;
+	if ( save( label, "IINST2", value, res.IINST2 ) )   goto readline;
+	if ( save( label, "IINST3", value, res.IINST3 ) )   goto readline;
 	if ( save( label, "ADPS", value, res.ADPS ) )		goto readline;
 	if ( save( label, "IMAX", value, res.IMAX ) )		goto readline;
+	if ( save( label, "IMAX1", value, res.IMAX1 ) )   	goto readline;
+	if ( save( label, "IMAX2", value, res.IMAX2 ) )   	goto readline;
+	if ( save( label, "IMAX3", value, res.IMAX3 ) )   	goto readline;
 	if ( save( label, "PAPP", value, res.PAPP ) )		goto readline;
+	if ( save( label, "PMAX", value, res.PMAX ) )   goto readline;
 
 	if ( save( label, "HHPHC", value[0], res.HHPHC ) )	goto readline;
 
